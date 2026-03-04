@@ -32,23 +32,37 @@ jobs:
       - name: Build project
         run: pnpm run build
 
+      - name: Save build cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .next
+            node_modules
+          key: build-${{ github.sha }}
+
   cypress-run:
     needs: build
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      # Install dependencies with caching
-      # and run all Cypress tests
-            # Installer pnpm
+        
+        # Installer pnpm
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: 10
           cache: true
+
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .next
+            node_modules
+          key: build-${{ github.sha }}
           
       - name: Cypress run
         uses: cypress-io/github-action@v7
         with:
-          build: pnpm run build
           start: pnpm run start
