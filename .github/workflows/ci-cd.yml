@@ -79,6 +79,8 @@ jobs:
       - name: Install Firefox
         if: matrix.browser == 'firefox'
         uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: '133.0'
 
       - name: Install Edge
         if: matrix.browser == 'edge'
