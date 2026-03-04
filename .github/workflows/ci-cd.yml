@@ -1,5 +1,5 @@
 name: CI-CD
-run-name: ${{ github.actor }} is learning GitHub Actions
+run-name: ${{ github.actor }} deployed code to ${{ github.ref_name }}
 on: [push]
 jobs:
   build:
@@ -14,3 +14,12 @@ jobs:
           version: 10
       - run: pnpm install
       - run: pnpm run build
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Cypress run
+        uses: cypress-io/github-action@v7
+        with:
+          browser: chrome-for-testing
