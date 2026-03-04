@@ -61,9 +61,6 @@ jobs:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: Approve Cypress build scripts (CI)
-        run: pnpm config set allow-builds.cypress true
-
       # Lancer Cypress
       - name: Run Cypress tests
         uses: cypress-io/github-action@v7
