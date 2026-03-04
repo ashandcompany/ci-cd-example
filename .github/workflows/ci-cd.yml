@@ -12,13 +12,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1️⃣ Installer pnpm
+      # Installer pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      # 2️⃣ Installer Node.js + cache pnpm
+      # Installer Node.js + cache pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -38,13 +38,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1️⃣ Installer pnpm
+      # Installer pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      # 2️⃣ Installer Node.js + cache pnpm
+      # Installer Node.js + cache pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -54,14 +54,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # 3️⃣ Cache du binaire Cypress
+      # Cache du binaire Cypress
       - name: Cache Cypress binary
         uses: actions/cache@v4
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      # 4️⃣ Lancer Cypress
+      - name: Approve pnpm build scripts
+        run: pnpm approve-builds
+
+      # Lancer Cypress
       - name: Run Cypress tests
         uses: cypress-io/github-action@v7
         with:
