@@ -105,7 +105,7 @@ jobs:
 
       - name: Setup Firefox
         if: matrix.browser == 'firefox'
-        uses: browser-actions/setup-firefox@v2
+        uses: browser-actions/setup-firefox@v1
 
       - name: Run e2e tests on ${{ matrix.browser }}
         uses: cypress-io/github-action@v7
