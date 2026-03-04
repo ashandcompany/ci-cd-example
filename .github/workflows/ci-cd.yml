@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
