@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm' # Cache du store pnpm global (~/.pnpm-store)
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install
@@ -29,8 +29,6 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      # Cache séparé pour l'artefact de build + Cypress binaries
-      # Clé = SHA du commit → unique par build, partagé entre jobs parallèles
       - name: Save build & Cypress cache
         uses: actions/cache/save@v4
         with:
@@ -44,7 +42,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false # Continue les autres browsers si l'un échoue
+      fail-fast: false
       matrix:
         browser: [chrome, edge, firefox]
     steps:
@@ -62,8 +60,6 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
 
-      # Restore du cache build (node_modules + .next + Cypress binary)
-      # restore-keys = fallback si le SHA exact n'est pas trouvé (ex: reruns)
       - name: Restore build & Cypress cache
         uses: actions/cache/restore@v4
         with:
@@ -75,7 +71,6 @@ jobs:
           restore-keys: |
             build-
 
-      # Firefox nécessite le browser installé sur le runner
       - name: Install Firefox
         if: matrix.browser == 'firefox'
         uses: browser-actions/setup-firefox@v1
@@ -89,7 +84,7 @@ jobs:
       - name: Cypress E2E (${{ matrix.browser }})
         uses: cypress-io/github-action@v6
         with:
-          install: false # On utilise le cache, pas de réinstall
+          install: false
           start: pnpm run start
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 60
@@ -97,16 +92,18 @@ jobs:
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
-        if: failure() # Seulement en cas d'échec, pas toujours
+        if: always()
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload videos
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: cypress-videos-${{ matrix.browser }}
           path: cypress/videos
           if-no-files-found: ignore
+          retention-days: 7
