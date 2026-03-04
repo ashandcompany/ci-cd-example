@@ -109,6 +109,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y firefox
 
+      - name: Install Cypress and detect browsers
+        if: matrix.browser == 'firefox'
+        run: npx cypress install --browser firefox
+
       - name: Run e2e tests on ${{ matrix.browser }}
         uses: cypress-io/github-action@v7
         with:
