@@ -1,5 +1,10 @@
 {
   "private": true,
+  "engines": {
+    "pnpm": ">=9.0.0 <11.0.0",
+    "npm": ">=10.0.0 <11.0.0",
+    "node": ">=22.0.0 <23.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,7 +23,8 @@
     "@types/node": "18.0.6",
     "@types/react": "18.2.8",
     "@types/react-dom": "18.0.6",
-    "cypress": "12.3.0",
+    "cypress": "14.3.3",
+    "cypress-axe": "^1.2.3",
     "start-server-and-test": "1.15.2",
     "typescript": "4.7.4"
   }
