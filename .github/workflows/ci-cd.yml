@@ -12,13 +12,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Installer pnpm
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: 10
 
-      # Installer Node.js + cache pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -47,7 +45,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         
-        # Installer pnpm
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
@@ -74,6 +71,7 @@ jobs:
           name: cypress-screenshots
           path: cypress/screenshots
           if-no-files-found: ignore
+          
       - uses: actions/upload-artifact@v7
         if: always()
         with:
