@@ -12,16 +12,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
+          cache: 'pnpm' # Cache du store pnpm global (~/.pnpm-store)
 
       - name: Install dependencies
         run: pnpm install
@@ -29,7 +29,9 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Save build cache
+      # Cache séparé pour l'artefact de build + Cypress binaries
+      # Clé = SHA du commit → unique par build, partagé entre jobs parallèles
+      - name: Save build & Cypress cache
         uses: actions/cache/save@v4
         with:
           path: |
@@ -38,78 +40,31 @@ jobs:
             ~/.cache/Cypress
           key: build-${{ github.sha }}
 
-  cypress-run:
-    needs: build
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Restore build cache
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            .next
-            node_modules
-            ~/.cache/Cypress
-          key: build-${{ github.sha }}
-          
-      - name: Cypress run
-        uses: cypress-io/github-action@v7
-        with:
-          install: false
-          start: pnpm run start
-
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: cypress-screenshots
-          path: cypress/screenshots
-          if-no-files-found: ignore
-          
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: cypress-videos
-          path: cypress/videos
-          if-no-files-found: ignore
-
   e2e-tests:
     needs: build
-    name: E2E Tests (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     strategy:
-        fail-fast: false
-        matrix:
-            browser: [chrome, edge, firefox]
+      fail-fast: false # Continue les autres browsers si l'un échoue
+      matrix:
+        browser: [chrome, edge, firefox]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
 
-      - name: Restore build cache
+      # Restore du cache build (node_modules + .next + Cypress binary)
+      # restore-keys = fallback si le SHA exact n'est pas trouvé (ex: reruns)
+      - name: Restore build & Cypress cache
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -117,29 +72,38 @@ jobs:
             node_modules
             ~/.cache/Cypress
           key: build-${{ github.sha }}
+          restore-keys: |
+            build-
 
-      - name: Install Firefox (non-snap)
+      # Firefox nécessite le browser installé sur le runner
+      - name: Install Firefox
         if: matrix.browser == 'firefox'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y firefox
+        uses: browser-actions/setup-firefox@v1
 
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v7
+      - name: Install Edge
+        if: matrix.browser == 'edge'
+        uses: browser-actions/setup-edge@v1
+
+      - name: Cypress E2E (${{ matrix.browser }})
+        uses: cypress-io/github-action@v6
         with:
-          browser: ${{ matrix.browser }}
-          install: false
+          install: false # On utilise le cache, pas de réinstall
           start: pnpm run start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 60
+          browser: ${{ matrix.browser }}
 
-      - uses: actions/upload-artifact@v7
-        if: always()
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure() # Seulement en cas d'échec, pas toujours
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           if-no-files-found: ignore
 
-      - uses: actions/upload-artifact@v7
-        if: always()
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: failure()
         with:
           name: cypress-videos-${{ matrix.browser }}
           path: cypress/videos
