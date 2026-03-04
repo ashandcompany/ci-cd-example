@@ -38,6 +38,7 @@ jobs:
           path: |
             .next
             node_modules
+            ~/.cache/Cypress
           key: build-${{ github.sha }}
 
   cypress-run:
@@ -60,6 +61,7 @@ jobs:
           path: |
             .next
             node_modules
+            ~/.cache/Cypress
           key: build-${{ github.sha }}
           
       - name: Cypress run
