@@ -3,6 +3,7 @@ run-name: ${{ github.actor }} deployed code to ${{ github.ref_name }}
 
 on:
   push:
+  pull_request:
 
 jobs:
   build:
@@ -11,16 +12,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 1️⃣ Installer pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # 2️⃣ Installer Node.js + cache pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Install dependencies
         run: pnpm install
@@ -32,13 +35,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # 1️⃣ Installer pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
+      # 2️⃣ Installer Node.js + cache pnpm
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -48,12 +54,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # 3️⃣ Cache du binaire Cypress
       - name: Cache Cypress binary
         uses: actions/cache@v4
         with:
           path: ~/.cache/Cypress
-          key: cypress-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
+      # 4️⃣ Lancer Cypress
       - name: Run Cypress tests
         uses: cypress-io/github-action@v7
         with:
