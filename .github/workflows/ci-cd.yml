@@ -49,3 +49,6 @@ jobs:
           
       - name: Cypress run
         uses: cypress-io/github-action@v7
+        with:
+          build: pnpm run build
+          start: pnpm run start
