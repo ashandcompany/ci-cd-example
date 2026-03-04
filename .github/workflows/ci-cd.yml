@@ -3,9 +3,7 @@ run-name: ${{ github.actor }} deployed code to ${{ github.ref_name }}
 
 on:
   push:
-    branches: [main, develop]
   pull_request:
-    branches: [main]
 
 # Annule les runs en cours pour les mêmes commits
 concurrency:
