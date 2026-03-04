@@ -5,53 +5,40 @@ on:
   push:
   pull_request:
 
-# Annule les runs en cours pour les mêmes commits
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
-      
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-      
-      - name: Cache Next.js
-        uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
-            nextjs-
-      
-      - name: Cache Cypress
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            cypress-${{ runner.os }}-
-      
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
-      
-      - name: Build
+        run: pnpm install
+
+      - name: Install Cypress binary
+        run: pnpm cypress install
+
+      - name: Build project
         run: pnpm run build
-      
-      - name: Save build
+
+      - name: Save build & Cypress cache
         uses: actions/cache/save@v4
         with:
-          path: .next
+          path: |
+            .next
+            node_modules
+            ~/.cache/Cypress
           key: build-${{ github.sha }}
 
   e2e-tests:
@@ -62,46 +49,42 @@ jobs:
       matrix:
         browser: [chrome, edge, firefox]
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 10
-      
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-      
-      - name: Restore build
+
+      - name: Restore build & Cypress cache
         uses: actions/cache/restore@v4
         with:
-          path: .next
+          path: |
+            .next
+            node_modules
+            ~/.cache/Cypress
           key: build-${{ github.sha }}
-          fail-on-cache-miss: true  # Échoue si le cache n'est pas trouvé
-      
-      - name: Restore Cypress cache
-        uses: actions/cache/restore@v4
+          restore-keys: |
+            build-
+
+      - name: Install Firefox
+        if: matrix.browser == 'firefox'
+        uses: browser-actions/setup-firefox@v1
         with:
-          path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      
-      - name: Install browsers
-        run: |
-          if [ "${{ matrix.browser }}" = "firefox" ]; then
-            echo "Installing Firefox..."
-            # Installation plus rapide via apt
-            sudo apt-get update && sudo apt-get install -y firefox
-          elif [ "${{ matrix.browser }}" = "edge" ]; then
-            echo "Installing Edge..."
-            # Installation plus rapide via script
-            curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-            sudo install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
-            sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge-dev.list'
-            sudo apt-get update && sudo apt-get install -y microsoft-edge-stable
-          fi
-      
-      - name: Cypress E2E
+          firefox-version: '133.0'
+
+      - name: Install Edge
+        if: matrix.browser == 'edge'
+        uses: browser-actions/setup-edge@v1
+
+      - name: Cypress E2E (${{ matrix.browser }})
         uses: cypress-io/github-action@v6
         with:
           install: false
@@ -109,15 +92,21 @@ jobs:
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 60
           browser: ${{ matrix.browser }}
-          # Réduit le temps d'attente
-          command-prefix: 'pnpm run'
-      
-      - name: Upload artifacts
-        if: failure()
+
+      - name: Upload screenshots
         uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          name: cypress-results-${{ matrix.browser }}
-          path: |
-            cypress/screenshots
-            cypress/videos
-          retention-days: 3  # Réduit à 3 jours
+          name: cypress-screenshots-${{ matrix.browser }}
+          path: cypress/screenshots
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos-${{ matrix.browser }}
+          path: cypress/videos
+          if-no-files-found: ignore
+          retention-days: 7
