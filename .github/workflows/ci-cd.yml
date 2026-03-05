@@ -6,39 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build project
-        run: pnpm run build
-
-      - name: Save build cache
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .next
-            node_modules
-          key: build-${{ github.sha }}
-
   build-and-push-docker:
-    needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
@@ -72,3 +40,27 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:latest
             ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:buildcache,mode=max
+
+  deploy:
+    needs: build-and-push-docker
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:latest
+            docker stop next-app || true
+            docker rm next-app || true
+            docker run -d \
+              --name next-app \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:latest
