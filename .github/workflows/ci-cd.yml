@@ -119,6 +119,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .next
+            node_modules
+          key: build-${{ github.sha }}
+          restore-keys: |
+            build-
+
       - name: Deploy
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
@@ -129,6 +139,7 @@ jobs:
           ARGS: "-rlgoDzvc -i --delete"
           EXCLUDE: "/node_modules/"
           SCRIPT_AFTER: |
+            export PATH="$HOME/.local/share/pnpm:$PATH"
             cd /home/debian/github/ci-cd-example
             pnpm install --prod
             pm2 restart next-app || pm2 start "pnpm start" --name next-app
