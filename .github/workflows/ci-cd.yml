@@ -39,10 +39,10 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:latest
-            ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:${{ github.sha }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:buildcache,mode=max
+            ghcr.io/${{ github.repository }}/next:latest
+            ghcr.io/${{ github.repository }}/next:${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/next:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/next:buildcache,mode=max
 
   deploy:
     needs: build-and-push-docker
