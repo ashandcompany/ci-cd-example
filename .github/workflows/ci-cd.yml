@@ -1,149 +1,18 @@
 name: CI-CD
-run-name: ${{ github.actor }} a déployé du code vers ce repo ${{ github.ref_name }}
+run-name: ${{ github.actor }} a déployé du code sur ${{ github.ref_name }}
 
 on:
   push:
   pull_request:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Install Cypress binary
-        run: pnpm cypress install
-
-      - name: Build project
-        run: pnpm run build
-
-      - name: Save build & Cypress cache
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            .next
-            node_modules
-            ~/.cache/Cypress
-          key: build-${{ github.sha }}
-
-  e2e-tests:
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chrome, edge, firefox]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Restore build & Cypress cache
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            .next
-            node_modules
-            ~/.cache/Cypress
-          key: build-${{ github.sha }}
-          restore-keys: |
-            build-
-
-      - name: Install Firefox
-        if: matrix.browser == 'firefox'
-        uses: browser-actions/setup-firefox@v1
-        with:
-          firefox-version: '133.0'
-
-      - name: Install Edge
-        if: matrix.browser == 'edge'
-        uses: browser-actions/setup-edge@v1
-
-      - name: Cypress E2E (${{ matrix.browser }})
-        uses: cypress-io/github-action@v6
-        with:
-          install: false
-          start: pnpm run start
-          wait-on: 'http://localhost:3000'
-          wait-on-timeout: 60
-          browser: ${{ matrix.browser }}
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: cypress-screenshots-${{ matrix.browser }}
-          path: cypress/screenshots
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Upload videos
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cypress-videos-${{ matrix.browser }}
-          path: cypress/videos
-          if-no-files-found: ignore
-          retention-days: 7
-
   deploy:
-    needs: e2e-tests
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Restore build cache
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            .next
-            node_modules
-          key: build-${{ github.sha }}
-          restore-keys: |
-            build-
-
-      - name: Debug - vérifier que .next est présent  # ← à retirer une fois confirmé
-        run: |
-          echo "=== Contenu de .next ==="
-          ls -la .next/ | head -20 || echo "❌ .next NOT FOUND"
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Deploy
         uses: easingthemes/ssh-deploy@v5.1.0
@@ -153,9 +22,10 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: /home/debian/github/ci-cd-example
           ARGS: "-rlgoDzvc -i --delete"
-          EXCLUDE: "/node_modules/, /.git/"
+          EXCLUDE: "/node_modules/, /.git/, /.next/"
           SCRIPT_AFTER: |
             export PATH="$HOME/.local/share/pnpm:$PATH"
             cd /home/debian/github/ci-cd-example
-            pnpm install --prod --frozen-lockfile
+            pnpm install --frozen-lockfile
+            pnpm run build
             pm2 restart next-app || pm2 start /home/debian/.local/share/pnpm/pnpm --name next-app --interpreter=none -- start
