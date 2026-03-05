@@ -1,7 +1,22 @@
 import GalleryItem from "./GalleryItem";
 import TextBlock from "./TextBlock";
 
-const galleryContent = [
+type ImageGalleryItem = {
+  type: "image";
+  src: string;
+  alt: string;
+  span: string;
+};
+
+type TextGalleryItem = {
+  type: "text";
+  content: string;
+  span: string;
+};
+
+type GalleryContentItem = ImageGalleryItem | TextGalleryItem;
+
+const galleryContent: GalleryContentItem[] = [
   // Images
   { type: "image", src: "https://i.pinimg.com/736x/52/09/02/520902ce2b48c46c081d989a50ef9422.jpg", alt: "Forest", span: "row-span-2 col-span-2" },
   { type: "image", src: "https://i.pinimg.com/1200x/75/6b/98/756b987de2396919e055d4ee91892740.jpg", alt: "Ocean", span: "col-span-1 row-span-1" },

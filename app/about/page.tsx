@@ -1,10 +1,9 @@
 import AboutComponent from "../../components/about-component";
-import styles from "../../styles/Home.module.css";
 
 export default function About() {
   return (
-    <div className={styles.container}>
-      <main className={styles.main}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      <main className="flex flex-col items-center justify-center flex-1">
         <AboutComponent />
       </main>
     </div>
