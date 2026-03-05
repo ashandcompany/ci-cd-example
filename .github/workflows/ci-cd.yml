@@ -68,11 +68,7 @@ jobs:
         with:
           context: .
           push: true
-          # ✅ Supprimé linux/arm64 + QEMU (x5-10 plus rapide)
           platforms: linux/amd64
           tags: |
             ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:latest
             ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:${{ github.sha }}
-          # ✅ Cache des layers Docker entre les runs
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:buildcache,mode=max
