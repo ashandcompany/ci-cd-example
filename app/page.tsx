@@ -1,13 +1,9 @@
-import Link from "next/link";
 import Gallery from "./components/Gallery";
 
 export default function Home() {
   return (
-    <div>
-      {/* <nav>
-        <Link href="/about">A propos</Link>
-      </nav> */}
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <Gallery />
-    </div>
+    </main>
   );
 }
