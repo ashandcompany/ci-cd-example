@@ -4,9 +4,9 @@ import Gallery from "./components/Gallery";
 export default function Home() {
   return (
     <div>
-      <nav>
+      {/* <nav>
         <Link href="/about">A propos</Link>
-      </nav>
+      </nav> */}
       <Gallery />
     </div>
   );
