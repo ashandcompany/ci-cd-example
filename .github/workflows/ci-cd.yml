@@ -119,6 +119,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
       - name: Restore build cache
         uses: actions/cache/restore@v4
         with:
@@ -129,6 +140,11 @@ jobs:
           restore-keys: |
             build-
 
+      - name: Debug - vérifier que .next est présent  # ← à retirer une fois confirmé
+        run: |
+          echo "=== Contenu de .next ==="
+          ls -la .next/ | head -20 || echo "❌ .next NOT FOUND"
+
       - name: Deploy
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
@@ -137,9 +153,9 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: /home/debian/github/ci-cd-example
           ARGS: "-rlgoDzvc -i --delete"
-          EXCLUDE: "/node_modules/"
+          EXCLUDE: "/node_modules/, /.git/"
           SCRIPT_AFTER: |
             export PATH="$HOME/.local/share/pnpm:$PATH"
             cd /home/debian/github/ci-cd-example
-            pnpm install
+            pnpm install --prod --frozen-lockfile
             pm2 restart next-app || pm2 start /home/debian/.local/share/pnpm/pnpm --name next-app --interpreter=none -- start
