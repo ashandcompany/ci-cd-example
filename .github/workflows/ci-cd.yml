@@ -41,8 +41,6 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}/next:latest
             ghcr.io/${{ github.repository }}/next:${{ github.sha }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/next:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/next:buildcache,mode=max
 
   deploy:
     needs: build-and-push-docker
