@@ -55,6 +55,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "${{ secrets.GHCR_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
             sudo docker pull ghcr.io/${{ github.repository_owner }}/ci-cd-example/next:latest
             sudo docker stop next-app || true
             sudo docker rm next-app || true
