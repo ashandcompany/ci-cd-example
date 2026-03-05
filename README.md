@@ -1,25 +1,65 @@
-# Next.js + Cypress
+# Docker & Docker Compose
 
-This example shows how to configure Cypress to work with Next.js.
+## Développement (Dev)
 
-## Deploy your own
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-cypress&project-name=with-cypress&repository-name=with-cypress)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+Lancer l'app avec hot reload :
 
 ```bash
-npx create-next-app --example with-cypress with-cypress-app
+docker compose up
 ```
+
+Lancer en arrière-plan :
 
 ```bash
-yarn create next-app --example with-cypress with-cypress-app
+docker compose up -d
 ```
+
+Arrêter les conteneurs :
 
 ```bash
-pnpm create next-app --example with-cypress with-cypress-app
+docker compose down
 ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+Rebuild après modification des dépendances :
+
+```bash
+docker compose up --build
+```
+
+## Production
+
+Builder l'image :
+
+```bash
+docker build -t ci-cd-example .
+```
+
+Lancer le conteneur :
+
+```bash
+docker run -p 3000:3000 ci-cd-example
+```
+
+Arrêter le conteneur (remplacer `ID` par l'ID du conteneur) :
+
+```bash
+docker stop ID
+```
+
+## Logs
+
+Afficher les logs en dev :
+
+```bash
+docker compose logs -f
+```
+
+Afficher les logs d'un conteneur spécifique en prod :
+
+```bash
+docker logs ID -f
+```
+
+---
+
+L'app sera accessible sur `http://localhost:3000`
