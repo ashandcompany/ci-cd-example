@@ -14,4 +14,8 @@ COPY . .
 
 RUN pnpm run build
 
+COPY .docker/next/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT [ "entrypoint.sh" ]
 CMD ["pnpm", "run", "start"]
