@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div>
       <nav>
-        <Link href="/about">About</Link>
+        <Link href="/about">A propos</Link>
       </nav>
       <Gallery />
     </div>
