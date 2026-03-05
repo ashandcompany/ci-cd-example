@@ -4,19 +4,25 @@
 // https://github.com/cypress-io/eslint-plugin-cypress
 
 // Cypress E2E Test
-describe("Navigation", () => {
-  it("should navigate to the about page", () => {
-    // Start from the index page
+describe("Gallery", () => {
+  beforeEach(() => {
     cy.visit("http://localhost:3000");
+  });
 
-    // Find a link with an href attribute containing "about" and click it
-    cy.get('a[href*="about"]').click();
+  it("should display the gallery section with a title", () => {
+    cy.get("h2").contains("Photo Gallery");
+  });
 
-    // The new url should include "/about"
-    cy.url().should("include", "/about");
+  it("should render 6 gallery items", () => {
+    cy.get("section").find("img").should("have.length", 6);
+  });
 
-    // The new page should contain an h1 with "About page"
-    cy.get("h1").contains("About Page");
+  it("should display a caption for each gallery item", () => {
+    const captions = ["Forest", "Ocean", "Mountain", "City", "Desert", "River"];
+
+    captions.forEach((caption) => {
+      cy.get("p").contains(caption);
+    });
   });
 });
 
