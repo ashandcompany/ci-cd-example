@@ -29,6 +29,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    ".github/workflows/.next/types/**/*.ts",
+    ".github/workflows/.next/dev/types/**/*.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
